@@ -29,15 +29,19 @@ public class CyclicBarrier {
 		// (parties - 1) indicates the first to arrive and zero indicates
 		// the last to arrive
 		
-		// grab our acquirement index before we increment to be safe with the shared var
+		//  be safe with the shared var
 		numAcquiredSemaphore.acquire();
+		
+		// grab my result index
 		int result = numAcquired;
 		
 		// increment the index for the next guy to read
 		numAcquired++;
+		
+		// let others read shared var
 		numAcquiredSemaphore.release();
 
-		// we'll use an IF because we're using a fair lock
+		// we'll use an IF here because we're going to reset numAcquired after we get through.
 		if (numAcquired != parties){
 			// if we're not the last party here, acquire a lock
 			System.out.println("Acquiring...");
