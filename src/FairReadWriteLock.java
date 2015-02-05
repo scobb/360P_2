@@ -11,6 +11,7 @@ public class FairReadWriteLock {
 	//     released the lock or no preceding writer thread exists
 	
 	// TODO - write tests.
+	// TODO - this is not fair
 	private int numReaders;
 	private int numWriters;
 	public FairReadWriteLock(){
