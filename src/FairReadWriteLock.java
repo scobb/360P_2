@@ -1,5 +1,3 @@
-import java.util.concurrent.Semaphore;
-
 
 public class FairReadWriteLock {
 	// REQUIREMENTS:
@@ -80,6 +78,9 @@ public class FairReadWriteLock {
 				System.out.println("Exception: " + exc);
 			}
 		}
+		
+		// once we get in, increment the number of writers
+		numWriters++;
 		
 		// increment the turn.
 		synchronized(this){
