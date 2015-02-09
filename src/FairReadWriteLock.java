@@ -19,8 +19,6 @@ public class FairReadWriteLock {
 	private int numWriters;
 	private int numReaders;
 	
-	private Semaphore sem;
-	
 	public FairReadWriteLock(){
 		// implement a "take a number" methodology?
 		schedule = 0;
@@ -29,37 +27,15 @@ public class FairReadWriteLock {
 		numWriters = 0;
 		numReaders = 0;
 		
-		// are we allowed to use a semaphore?
-		sem = new Semaphore(1);
-		
-	}
-	private int getScheduledTurn(){
-		// helper method - acquires the semaphore to alter the shared variable schedule
-		try {
-			sem.acquire();
-		} catch (InterruptedException exc){
-			System.out.println("Exception: " + exc);
-		}
-		int result = schedule;
-		schedule++;
-		sem.release();
-		return result;
-	}
-	
-	private void incrementTurn(){
-		// helper method - acquires the semaphore to alter the shared variable turn
-		try {
-			sem.acquire();
-		} catch (InterruptedException exc){
-			System.out.println("Exception: " + exc);
-		}
-		turn++;
-		sem.release();
 	}
 	
 	void beginRead(){
 		// Take a number.
-		int myScheduledTurn = getScheduledTurn();
+		int myScheduledTurn;
+		synchronized(this){
+			myScheduledTurn = schedule;
+			schedule++;
+		}
 		
 		// ensure there are no writers and it's my turn to read
 		while (numWriters > 0 || myScheduledTurn < turn){
@@ -74,7 +50,9 @@ public class FairReadWriteLock {
 		numReaders++;
 		
 		// when I'm in, it's the next guy's turn.
-		incrementTurn();
+		synchronized(this){
+			turn++;
+		}
 		
 		// because multiple people can read, we need to notify here to let other readers in.
 		notifyAll();
@@ -87,7 +65,12 @@ public class FairReadWriteLock {
 	void beginWrite(){
 		
 		// take a number
-		int myScheduledTurn = getScheduledTurn();
+		int myScheduledTurn;
+
+		synchronized(this){
+			myScheduledTurn = schedule;
+			schedule++;
+		}
 		
 		// if there's a reader, a writer, or it's not my turn, wait.
 		while (numReaders > 0 || numWriters > 0 || myScheduledTurn < turn){
@@ -99,7 +82,9 @@ public class FairReadWriteLock {
 		}
 		
 		// increment the turn.
-		incrementTurn();
+		synchronized(this){
+			turn++;
+		}
 		
 	}
 	void endWrite(){
