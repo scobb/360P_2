@@ -83,7 +83,9 @@ public class FairReadWriteLockTest {
 		Future<Integer> writerResult = threadpool.submit(new TestWriter(lock, 1));
 
 		for (int i = 0; i < 5; ++i){
+			// using sleep to ensure the correct order of submission
 			readerResults.add(threadpool.submit(new TestReader(lock, i)));
+			TimeUnit.SECONDS.sleep(1);
 		}
 		assertEquals(5, (int)writerResult.get());
 		assertEquals(10, (int)readerResults.get(9).get());
@@ -98,6 +100,7 @@ public class FairReadWriteLockTest {
 		List<Future<Integer>> writerResults = new ArrayList<Future<Integer>>();
 		for (int i = 0; i < 5; ++i ){
 			writerResults.add(threadpool.submit(new TestWriter(lock, 5-i)));
+			TimeUnit.SECONDS.sleep(1);
 		}
 		for (int i = 0; i < 5; ++i) {
 			//writerResults.get(i).get();
