@@ -17,6 +17,8 @@ public class FairReadWriteLock {
 	private int numWriters;
 	private int numReaders;
 	
+	private ReadWriteLockLogger logger = new ReadWriteLockLogger();
+	
 	public FairReadWriteLock(){
 		// implement a "take a number" methodology?
 		schedule = 0;
@@ -27,16 +29,17 @@ public class FairReadWriteLock {
 		
 	}
 	
-	void beginRead(){
+	synchronized void beginRead(){
 		// Take a number.
+	    logger.logTryToRead(); 
 		int myScheduledTurn;
-		synchronized(this){
-			myScheduledTurn = schedule;
-			schedule++;
-		}
+		myScheduledTurn = schedule;
+		// System.out.println("beginRead: myScheduledTurn: " + schedule);
+		schedule++;
+		
 		
 		// ensure there are no writers and it's my turn to read
-		while (numWriters > 0 || myScheduledTurn < turn){
+		while (numWriters > 0 || turn < myScheduledTurn){
 			try {
 				wait();
 			} catch (InterruptedException exc){
@@ -48,32 +51,34 @@ public class FairReadWriteLock {
 		numReaders++;
 		
 		// when I'm in, it's the next guy's turn.
-		synchronized(this){
-			turn++;
+		turn++;
+		// System.out.println("turn: " + turn);
 			
-			// because multiple people can read, we need to notify here to let other readers in.
-			notifyAll();
-		}
-		
+		// because multiple people can read, we need to notify here to let other readers in.
+		notifyAll();
+	    logger.logBeginRead(); 
 	}
 	synchronized void endRead(){
 		numReaders--;
-		notifyAll();
+		// System.out.println("endRead. numReaders: " + numReaders);
+		if (numReaders == 0)
+			notifyAll();
+		logger.logEndRead();
 		
 	}
-	void beginWrite(){
+	synchronized void beginWrite(){
+		logger.logTryToWrite();
 		
 		// take a number
 		int myScheduledTurn;
-
-		synchronized(this){
-			myScheduledTurn = schedule;
-			schedule++;
-		}
+		myScheduledTurn = schedule;
+		// System.out.println("beginWrite: myScheduledTurn: " + schedule);
+		schedule++;
 		
 		// if there's a reader, a writer, or it's not my turn, wait.
-		while (numReaders > 0 || numWriters > 0 || myScheduledTurn < turn){
+		while (numReaders > 0 || numWriters > 0 || turn < myScheduledTurn){
 			try {
+				// System.out.println("Waiting. numReaders: " + numReaders + "numWriters: " + numWriters + " myScheduledTurn: " + myScheduledTurn + "turn: " + turn);
 				wait();
 			} catch (InterruptedException exc){
 				System.out.println("Exception: " + exc);
@@ -83,15 +88,18 @@ public class FairReadWriteLock {
 		// once we get in, increment the number of writers
 		numWriters++;
 		
-		// increment the turn.
-		synchronized(this){
-			turn++;
-		}
+		// increment the turn
+		turn++;
+		
+		logger.logBeginWrite();
 		
 	}
 	synchronized void endWrite(){
 		numWriters--;
-		notifyAll();
+		// System.out.println("endWrite. numWriters: " + numWriters);
+		if (numWriters == 0)
+			notifyAll();
+		logger.logEndWrite();
 		
 	}
 }
