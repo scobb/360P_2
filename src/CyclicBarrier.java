@@ -4,7 +4,7 @@ import java.util.concurrent.Semaphore;
 
 
 public class CyclicBarrier {
-	private int numAcquired, numWaiting, parties;
+	private int numAcquired, parties;
 	private Semaphore gateSemaphore;
 	private Semaphore numAcquiredSemaphore;
 	public CyclicBarrier(int parties){
@@ -12,7 +12,6 @@ public class CyclicBarrier {
 		// the given number of parties (threads) are waiting upon it
 		numAcquired = 0;
 		this.parties = parties;
-		numWaiting = 0;
 		// A fair lock to ensure no one can sneak ahead
 		gateSemaphore = new Semaphore(0, true);
 		
@@ -43,7 +42,6 @@ public class CyclicBarrier {
 		// we'll use an IF here because we're going to reset numAcquired after we get through.
 		if (numAcquired != parties){
 			// if we're not the last party here, acquire a lock
-			numWaiting++;
 			System.out.println("Acquiring...");
 			gateSemaphore.acquire();
 		}

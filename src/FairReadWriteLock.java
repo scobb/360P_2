@@ -50,12 +50,13 @@ public class FairReadWriteLock {
 		// when I'm in, it's the next guy's turn.
 		synchronized(this){
 			turn++;
+			
+			// because multiple people can read, we need to notify here to let other readers in.
+			notifyAll();
 		}
 		
-		// because multiple people can read, we need to notify here to let other readers in.
-		notifyAll();
 	}
-	void endRead(){
+	synchronized void endRead(){
 		numReaders--;
 		notifyAll();
 		
@@ -88,7 +89,7 @@ public class FairReadWriteLock {
 		}
 		
 	}
-	void endWrite(){
+	synchronized void endWrite(){
 		numWriters--;
 		notifyAll();
 		
