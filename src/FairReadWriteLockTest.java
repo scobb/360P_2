@@ -15,7 +15,7 @@ import org.junit.Test;
 public class FairReadWriteLockTest {
 	static int order = 0;
 	public void resetOrder(){
-		System.out.println("Resetting order.");
+		// System.out.println("Resetting order.");
 		order = 0;
 	}
 	public static class TestWriter implements Callable<Integer>{
@@ -29,6 +29,7 @@ public class FairReadWriteLockTest {
 		@Override
 		public Integer call() throws Exception {
 			lock.beginWrite();
+			int tmp = order++;
 			try {
 				TimeUnit.SECONDS.sleep(duration);
 			} catch (InterruptedException e) {
@@ -36,7 +37,7 @@ public class FairReadWriteLockTest {
 				e.printStackTrace();
 			}
 			lock.endWrite();
-			return order++;
+			return tmp;
 		}
 	}
 	public static class TestReader implements Callable<Integer>{
@@ -50,13 +51,14 @@ public class FairReadWriteLockTest {
 		@Override
 		public Integer call() throws Exception {
 			lock.beginRead();
+			int tmp = order++;
 			try {
 				TimeUnit.SECONDS.sleep(duration);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
 			lock.endRead();
-			return order++;
+			return tmp;
 		}
 	}
 	@Test
@@ -98,8 +100,8 @@ public class FairReadWriteLockTest {
 			writerResults.add(threadpool.submit(new TestWriter(lock, 5-i)));
 		}
 		for (int i = 0; i < 5; ++i) {
-			writerResults.get(i).get();
-			//assertEquals(i, (int)writerResults.get(i).get());
+			//writerResults.get(i).get();
+			assertEquals(i, (int)writerResults.get(i).get());
 		}
 		threadpool.shutdown();
 	}
