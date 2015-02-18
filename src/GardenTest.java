@@ -134,6 +134,10 @@ public class GardenTest {
 		assertEquals(0, newt.getOrder());
 		assertEquals(1, ben.getOrder());
 		assertEquals(2, mary.getOrder());
+		assertEquals(1, g.totalHolesDugByNewton());
+		assertEquals(1, g.totalHolesSeededByBenjamin());
+		assertEquals(1, g.totalHolesFilledByMary());
+		
 		threadpool.shutdown();
 	}
 	
@@ -159,6 +163,9 @@ public class GardenTest {
 		
 		assertEquals(3, n.getOrder());
 		threadpool.shutdown();
+		assertEquals(2, g.totalHolesDugByNewton());
+		assertEquals(1, g.totalHolesSeededByBenjamin());
+		assertEquals(1, g.totalHolesFilledByMary());
 	}
 	
 	

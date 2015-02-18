@@ -2,7 +2,7 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 
-public class Garden {
+public class Garden implements GardenCounts {
 	// implement the following function
 	// don't worry about exceptions
 	final private ReentrantLock lock = new ReentrantLock();
@@ -16,20 +16,35 @@ public class Garden {
 	private int numSeededHoles = 0;
 	private int max_holes;
 	private boolean shovelAvailable = true;
+	private int totalHolesDug = 0;
+	private int totalHolesSeeded = 0;
+	private int totalHolesFilled = 0;
 	
 	
 	// the constructor takes the MAX argument
 	public Garden(int MAX){
 		max_holes = MAX;
 	}
-	
-	public void startDigging() throws InterruptedException{
+    public int totalHolesDugByNewton() {
+    	return totalHolesDug;
+    }
+
+    public int totalHolesSeededByBenjamin() {
+    	return totalHolesSeeded;
+    }
+
+    public int totalHolesFilledByMary() {
+    	return totalHolesFilled;
+    }
+	public void startDigging() {
 		try {
 			lock.lock();
 			//System.out.println("Trying to start digging.");
 			int totalHoles = numUnseededHoles + numSeededHoles;
 			while (totalHoles == max_holes || !shovelAvailable) {
+				try {
 				readyToDig.await();
+				} catch (InterruptedException exc){}
 				totalHoles = numUnseededHoles + numSeededHoles;
 				//System.out.println("I was signalled.");
 				
@@ -49,6 +64,7 @@ public class Garden {
 			lock.lock();
 			//System.out.println("Lock acquired.");
 			++numUnseededHoles;
+			++totalHolesDug;
 			shovelAvailable = true;
 			
 			
@@ -64,13 +80,14 @@ public class Garden {
 		}
 		
 	}
-	public void startSeeding() throws InterruptedException{
+	public void startSeeding() {
 		try {
 			//System.out.println("Trying to start seeding.");
 			lock.lock();
 			while (numUnseededHoles == 0) { 
+				try {
 				readyToSeed.await();
-				//System.out.println("Just got signalled in readyToSeed.");
+				} catch (InterruptedException exc){}
 			}
 			//System.out.println("Starting seeding.");
 		} finally {
@@ -80,6 +97,7 @@ public class Garden {
 	public void doneSeeding(){
 		try {
 			lock.lock();
+			++totalHolesSeeded;
 			++numSeededHoles;
 			--numUnseededHoles;
 			readyToFill.signal();
@@ -89,12 +107,16 @@ public class Garden {
 		}
 		
 	}
-	public void startFilling() throws InterruptedException{
+	public void startFilling() {
 		try {
 			lock.lock();
 			//System.out.println("Trying to start filling.");
-			while (numSeededHoles == 0 || ! shovelAvailable)
+			while (numSeededHoles == 0 || ! shovelAvailable)  {
+				try {
 				readyToFill.await();
+				} catch (InterruptedException exc){}
+				
+			}
 			shovelAvailable = false;
 			//System.out.println("Filling started.");
 		} finally {
@@ -105,6 +127,7 @@ public class Garden {
 	public void doneFilling(){
 		try {
 			lock.lock();
+			++totalHolesFilled;
 			--numSeededHoles;
 			shovelAvailable = true;
 			readyToDig.signal();
