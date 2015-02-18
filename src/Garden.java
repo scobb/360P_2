@@ -26,9 +26,11 @@ public class Garden {
 	public void startDigging() throws InterruptedException{
 		try {
 			lock.lock();
+			System.out.println("Trying to start digging.");
 			int totalHoles = numUnseededHoles + numSeededHoles;
 			while (totalHoles == max_holes || !shovelAvailable)
 				readyToDig.await();
+			System.out.println("Starting digging.");
 			shovelAvailable = false;
 		} finally {
 			lock.unlock();
@@ -38,15 +40,20 @@ public class Garden {
 	}
 	public void doneDigging(){
 		try {
+			System.out.println("Trying to acquire lock.");
 			lock.lock();
+			System.out.println("Lock acquired.");
 			++numUnseededHoles;
 			shovelAvailable = true;
 			
-			// notify for shovel
-			readyToFill.notify();
 			
-			// notify for hole
-			readyToSeed.notify();
+			// signal for hole
+			System.out.println("signaling readyToSeed.");
+			readyToSeed.signal();
+			// signal for shovel
+			System.out.println("signaling readyToFill.");
+			readyToFill.signal();
+			System.out.println("Done digging.");
 		} finally {
 			lock.unlock();
 		}
@@ -54,9 +61,13 @@ public class Garden {
 	}
 	public void startSeeding() throws InterruptedException{
 		try {
+			System.out.println("Trying to start seeding.");
 			lock.lock();
-			while (numUnseededHoles == 0)
+			while (numUnseededHoles == 0) { 
 				readyToSeed.await();
+				System.out.println("Just got signalled in readyToSeed.");
+			}
+			System.out.println("Starting seeding.");
 		} finally {
 			lock.unlock();
 		}
@@ -66,7 +77,8 @@ public class Garden {
 			lock.lock();
 			++numSeededHoles;
 			--numUnseededHoles;
-			readyToFill.notify();
+			readyToFill.signal();
+			System.out.println("Done seeding.");
 		} finally {
 			lock.unlock();
 		}
@@ -75,9 +87,11 @@ public class Garden {
 	public void startFilling() throws InterruptedException{
 		try {
 			lock.lock();
+			System.out.println("Trying to start filling.");
 			while (numSeededHoles == 0 || ! shovelAvailable)
 				readyToFill.await();
 			shovelAvailable = false;
+			System.out.println("Filling started.");
 		} finally {
 			lock.unlock();
 		}
@@ -88,7 +102,8 @@ public class Garden {
 			lock.lock();
 			--numSeededHoles;
 			shovelAvailable = true;
-			readyToDig.notify();
+			readyToDig.signal();
+			System.out.println("Filling done.");
 		} finally {
 			lock.unlock();
 		}
