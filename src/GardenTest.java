@@ -158,6 +158,7 @@ public class GardenTest {
 		f1.get();
 		
 		assertEquals(3, n.getOrder());
+		threadpool.shutdown();
 	}
 	
 	
