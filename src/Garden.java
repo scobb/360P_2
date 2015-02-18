@@ -26,11 +26,16 @@ public class Garden {
 	public void startDigging() throws InterruptedException{
 		try {
 			lock.lock();
-			System.out.println("Trying to start digging.");
+			//System.out.println("Trying to start digging.");
 			int totalHoles = numUnseededHoles + numSeededHoles;
-			while (totalHoles == max_holes || !shovelAvailable)
+			while (totalHoles == max_holes || !shovelAvailable) {
 				readyToDig.await();
-			System.out.println("Starting digging.");
+				totalHoles = numUnseededHoles + numSeededHoles;
+				//System.out.println("I was signalled.");
+				
+			}
+				
+			//System.out.println("Starting digging.");
 			shovelAvailable = false;
 		} finally {
 			lock.unlock();
@@ -40,20 +45,20 @@ public class Garden {
 	}
 	public void doneDigging(){
 		try {
-			System.out.println("Trying to acquire lock.");
+			//System.out.println("Trying to acquire lock.");
 			lock.lock();
-			System.out.println("Lock acquired.");
+			//System.out.println("Lock acquired.");
 			++numUnseededHoles;
 			shovelAvailable = true;
 			
 			
 			// signal for hole
-			System.out.println("signaling readyToSeed.");
+			//System.out.println("signaling readyToSeed.");
 			readyToSeed.signal();
 			// signal for shovel
-			System.out.println("signaling readyToFill.");
+			//System.out.println("signaling readyToFill.");
 			readyToFill.signal();
-			System.out.println("Done digging.");
+			//System.out.println("Done digging.");
 		} finally {
 			lock.unlock();
 		}
@@ -61,13 +66,13 @@ public class Garden {
 	}
 	public void startSeeding() throws InterruptedException{
 		try {
-			System.out.println("Trying to start seeding.");
+			//System.out.println("Trying to start seeding.");
 			lock.lock();
 			while (numUnseededHoles == 0) { 
 				readyToSeed.await();
-				System.out.println("Just got signalled in readyToSeed.");
+				//System.out.println("Just got signalled in readyToSeed.");
 			}
-			System.out.println("Starting seeding.");
+			//System.out.println("Starting seeding.");
 		} finally {
 			lock.unlock();
 		}
@@ -78,7 +83,7 @@ public class Garden {
 			++numSeededHoles;
 			--numUnseededHoles;
 			readyToFill.signal();
-			System.out.println("Done seeding.");
+			//System.out.println("Done seeding.");
 		} finally {
 			lock.unlock();
 		}
@@ -87,11 +92,11 @@ public class Garden {
 	public void startFilling() throws InterruptedException{
 		try {
 			lock.lock();
-			System.out.println("Trying to start filling.");
+			//System.out.println("Trying to start filling.");
 			while (numSeededHoles == 0 || ! shovelAvailable)
 				readyToFill.await();
 			shovelAvailable = false;
-			System.out.println("Filling started.");
+			//System.out.println("Filling started.");
 		} finally {
 			lock.unlock();
 		}
@@ -103,7 +108,7 @@ public class Garden {
 			--numSeededHoles;
 			shovelAvailable = true;
 			readyToDig.signal();
-			System.out.println("Filling done.");
+			//System.out.println("Filling done.");
 		} finally {
 			lock.unlock();
 		}

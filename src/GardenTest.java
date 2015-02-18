@@ -1,8 +1,10 @@
 import static org.junit.Assert.*;
 
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
@@ -34,17 +36,17 @@ public class GardenTest {
 		public void run() {
 			try {
 				g.startDigging();
-				System.out.println("Acquiring order semaphore.");
+				//System.out.println("Acquiring order semaphore.");
 				orderSem.acquire();
 				myOrder = order++;
-				System.out.println("Releasing order semaphore.");
-				System.out.println("myOrder: " + order);
+				//System.out.println("Releasing order semaphore.");
+				//System.out.println("myOrder: " + order);
 				orderSem.release();
 				TimeUnit.SECONDS.sleep(1);
 			} catch (Exception e) {
 				System.out.println("Exception: " + e.getMessage());
 			}
-			System.out.println("Trying to finish digging.");
+			// System.out.println("Trying to finish digging.");
 			g.doneDigging();
 
 		}
@@ -71,7 +73,7 @@ public class GardenTest {
 				orderSem.acquire();
 				myOrder = order++;
 				orderSem.release();
-				TimeUnit.SECONDS.sleep(2);
+				TimeUnit.SECONDS.sleep(1);
 			} catch (Exception e) {
 				System.out.println("Exception: " + e.getMessage());
 			}
@@ -101,7 +103,7 @@ public class GardenTest {
 				orderSem.acquire();
 				myOrder = order++;
 				orderSem.release();
-				TimeUnit.SECONDS.sleep(2);
+				TimeUnit.SECONDS.sleep(1);
 			} catch (Exception e) {
 				System.out.println("Exception: " + e.getMessage());
 			}
@@ -112,24 +114,52 @@ public class GardenTest {
 	}
 
 	@Test
-	public void SimpleTest() {
+	public void SimpleTest() throws InterruptedException, ExecutionException{
+		resetOrder();
 		ExecutorService threadpool = Executors.newCachedThreadPool();
 		Garden g = new Garden(5);
 		TestMary mary = new TestMary(g);
 		TestBenjamin ben = new TestBenjamin(g);
 		TestNewton newt = new TestNewton(g);
+		
+		// ensure we submit out of order
 		Future<?> f1 = threadpool.submit(mary);
+		TimeUnit.SECONDS.sleep(1);
 		Future<?> f2 = threadpool.submit(ben);
+		TimeUnit.SECONDS.sleep(1);
 		Future<?> f3 = threadpool.submit(newt);
-		try {
-		TimeUnit.SECONDS.sleep(5);
-		} catch (Exception exc){
-			System.out.println("Exception: " + exc.getMessage());
-		}
+
+		// only have to get f1, because this should imply that others are done.
+		f1.get();
 		assertEquals(0, newt.getOrder());
 		assertEquals(1, ben.getOrder());
 		assertEquals(2, mary.getOrder());
-
+		threadpool.shutdown();
 	}
-
+	
+	@Test
+	public void tooManyHolesTest() throws InterruptedException, ExecutionException{
+		resetOrder();
+		ExecutorService threadpool = Executors.newCachedThreadPool();
+		Garden g = new Garden(1);
+		TestNewton n = new TestNewton(g);
+		Future<?> f1 = threadpool.submit(n);
+		f1.get();
+		assertEquals(0, n.getOrder());
+		
+		// should not be able to dig until we fill one
+		f1 = threadpool.submit(n);
+		
+		// okay, seed and fill that hole
+		threadpool.submit(new TestBenjamin(g));
+		threadpool.submit(new TestMary(g));
+		
+		// should be able to get f1 now, and it should happen last.
+		f1.get();
+		
+		assertEquals(3, n.getOrder());
+	}
+	
+	
+	
 }
