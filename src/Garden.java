@@ -65,6 +65,7 @@ public class Garden implements GardenCounts {
 			lock.lock();
 			//System.out.println("Lock acquired.");
 			++numUnseededHoles;
+			totalHolesDug.getAndIncrement();
 			//System.out.println("totalHolesDug: " + totalHolesDug.getAndIncrement());
 			shovelAvailable = true;
 
@@ -76,7 +77,7 @@ public class Garden implements GardenCounts {
 			readyToFill.signal();
 			//System.out.println("signaling readyToDig.");
 			readyToDig.signal();
-			//System.out.println("Done digging.");
+			// System.out.println("Done digging.");
 		} finally {
 			lock.unlock();
 		}
@@ -104,6 +105,7 @@ public class Garden implements GardenCounts {
 	public void doneSeeding() {
 		try {
 			lock.lock();
+			totalHolesSeeded.getAndIncrement();
 			//System.out.println("TotalHolesSeeded: " + totalHolesSeeded.getAndIncrement());
 			++numSeededHoles;
 			--numUnseededHoles;
@@ -139,6 +141,7 @@ public class Garden implements GardenCounts {
 	public void doneFilling() {
 		try {
 			lock.lock();
+			totalHolesFilled.getAndIncrement();
 			//System.out.println("totalHolesFilled: " + totalHolesFilled.getAndIncrement());
 			--numSeededHoles;
 			shovelAvailable = true;

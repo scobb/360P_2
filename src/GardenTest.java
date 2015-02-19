@@ -113,7 +113,7 @@ public class GardenTest {
 
 	}
 
-	// @Test
+	@Test
 	public void SimpleTest() throws InterruptedException, ExecutionException{
 		resetOrder();
 		ExecutorService threadpool = Executors.newCachedThreadPool();
@@ -141,7 +141,7 @@ public class GardenTest {
 		threadpool.shutdown();
 	}
 	
-	// @Test
+	@Test
 	public void tooManyHolesTest() throws InterruptedException, ExecutionException{
 		resetOrder();
 		ExecutorService threadpool = Executors.newCachedThreadPool();
@@ -177,24 +177,22 @@ public class GardenTest {
 		for (int i = 0; i < 10; ++i){
 			threadpool.submit(new TestNewton(g));
 		}
-//		System.out.println("newton: " + g.totalHolesDugByNewton());
 		assertEquals(0, g.totalHolesFilledByMary());
 		assertEquals(0, g.totalHolesSeededByBenjamin());
-//		Thread.sleep(3000);
+		//System.out.println("0");
 		while (g.totalHolesDugByNewton() != 10){
 			Thread.sleep(1000);
 		}
+		//System.out.println("1");
 		assertEquals(10, g.totalHolesDugByNewton());
 		for (int i = 0; i < 10; ++i){
 			threadpool.submit(new TestBenjamin(g));
 		}
 		assertEquals(0, g.totalHolesFilledByMary());
-//		System.out.println("newton: " + g.totalHolesDugByNewton());
-//		System.out.println("ben: " + g.totalHolesSeededByBenjamin());
-//		Thread.sleep(2000);
 		while (g.totalHolesSeededByBenjamin() != 10){
 			Thread.sleep(1000);
 		}
+		//System.out.println("2");
 		assertEquals(10, g.totalHolesSeededByBenjamin());
 		assertEquals(10, g.totalHolesDugByNewton());
 		
@@ -207,6 +205,7 @@ public class GardenTest {
 			Thread.sleep(1000);
 		}
 		threadpool.shutdown();
+		//System.out.println("3");
 		assertEquals(10, g.totalHolesSeededByBenjamin());
 		assertEquals(10, g.totalHolesDugByNewton());
 		assertEquals(10, g.totalHolesFilledByMary());
