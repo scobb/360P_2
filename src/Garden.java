@@ -39,14 +39,12 @@ public class Garden implements GardenCounts {
 		try {
 			lock.lock();
 			//System.out.println("Trying to start digging.");
-			int totalHoles = numUnseededHoles + numSeededHoles;
-			while (totalHoles == max_holes || !shovelAvailable) {
+			while ((numUnseededHoles + numSeededHoles) == max_holes || !shovelAvailable) {
 				try {
 					readyToDig.await();
 				} catch (InterruptedException exc) {
 					//System.out.println("EXCEPTION: " + exc);
 				}
-				totalHoles = numUnseededHoles + numSeededHoles;
 				//System.out.println("startDigging was signalled.");
 
 			}
