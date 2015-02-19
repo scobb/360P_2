@@ -42,11 +42,11 @@ public class CyclicBarrier {
 		// we'll use an IF here because we're going to reset numAcquired after we get through.
 		if (numAcquired != parties){
 			// if we're not the last party here, acquire a lock
-			System.out.println("Acquiring...");
+			//System.out.println("Acquiring...");
 			gateSemaphore.acquire();
 		}
 		// sanity check: the first one we see here should ALWAYS be the largest index.
-		System.out.println("I'm through, result: " + result);
+		//System.out.println("I'm through, result: " + result);
 		
 		// once we get here, ALL parties except the active one should be acquired (waiting)
 		

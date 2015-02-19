@@ -80,7 +80,9 @@ public class FairReadWriteLockTest {
 		for (int i = 0; i < 5; ++i){
 			readerResults.add(threadpool.submit(new TestReader(lock, 1)));
 		}
+		//TimeUnit.SECONDS.sleep(1);
 		Future<Integer> writerResult = threadpool.submit(new TestWriter(lock, 1));
+		TimeUnit.SECONDS.sleep(1);
 
 		for (int i = 0; i < 5; ++i){
 			// using sleep to ensure the correct order of submission
