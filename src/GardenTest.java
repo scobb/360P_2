@@ -42,7 +42,7 @@ public class GardenTest {
 				//System.out.println("Releasing order semaphore.");
 				//System.out.println("myOrder: " + order);
 				orderSem.release();
-				TimeUnit.SECONDS.sleep(1);
+				// TimeUnit.SECONDS.sleep(1);
 			} catch (Exception e) {
 				System.out.println("Exception: " + e.getMessage());
 			}
@@ -73,7 +73,7 @@ public class GardenTest {
 				orderSem.acquire();
 				myOrder = order++;
 				orderSem.release();
-				TimeUnit.SECONDS.sleep(1);
+				// TimeUnit.SECONDS.sleep(1);
 			} catch (Exception e) {
 				System.out.println("Exception: " + e.getMessage());
 			}
@@ -103,7 +103,7 @@ public class GardenTest {
 				orderSem.acquire();
 				myOrder = order++;
 				orderSem.release();
-				TimeUnit.SECONDS.sleep(1);
+				// TimeUnit.SECONDS.sleep(1);
 			} catch (Exception e) {
 				System.out.println("Exception: " + e.getMessage());
 			}
@@ -113,7 +113,7 @@ public class GardenTest {
 
 	}
 
-	@Test
+	// @Test
 	public void SimpleTest() throws InterruptedException, ExecutionException{
 		resetOrder();
 		ExecutorService threadpool = Executors.newCachedThreadPool();
@@ -125,9 +125,9 @@ public class GardenTest {
 		// ensure we submit out of order
 		Future<?> f1 = threadpool.submit(mary);
 		TimeUnit.SECONDS.sleep(1);
-		Future<?> f2 = threadpool.submit(ben);
+		threadpool.submit(ben);
 		TimeUnit.SECONDS.sleep(1);
-		Future<?> f3 = threadpool.submit(newt);
+		threadpool.submit(newt);
 
 		// only have to get f1, because this should imply that others are done.
 		f1.get();
@@ -141,7 +141,7 @@ public class GardenTest {
 		threadpool.shutdown();
 	}
 	
-	@Test
+	// @Test
 	public void tooManyHolesTest() throws InterruptedException, ExecutionException{
 		resetOrder();
 		ExecutorService threadpool = Executors.newCachedThreadPool();
@@ -156,6 +156,7 @@ public class GardenTest {
 		
 		// okay, seed and fill that hole
 		threadpool.submit(new TestBenjamin(g));
+		assertEquals(1, g.totalHolesDugByNewton());
 		threadpool.submit(new TestMary(g));
 		
 		// should be able to get f1 now, and it should happen last.
@@ -166,6 +167,50 @@ public class GardenTest {
 		assertEquals(2, g.totalHolesDugByNewton());
 		assertEquals(1, g.totalHolesSeededByBenjamin());
 		assertEquals(1, g.totalHolesFilledByMary());
+	}
+	
+	@Test
+	public void bigNumberTest() throws ExecutionException, InterruptedException{
+		resetOrder();
+		ExecutorService threadpool = Executors.newCachedThreadPool();
+		Garden g = new Garden(10);
+		for (int i = 0; i < 10; ++i){
+			threadpool.submit(new TestNewton(g));
+		}
+//		System.out.println("newton: " + g.totalHolesDugByNewton());
+		assertEquals(0, g.totalHolesFilledByMary());
+		assertEquals(0, g.totalHolesSeededByBenjamin());
+//		Thread.sleep(3000);
+		while (g.totalHolesDugByNewton() != 10){
+			Thread.sleep(1000);
+		}
+		assertEquals(10, g.totalHolesDugByNewton());
+		for (int i = 0; i < 10; ++i){
+			threadpool.submit(new TestBenjamin(g));
+		}
+		assertEquals(0, g.totalHolesFilledByMary());
+//		System.out.println("newton: " + g.totalHolesDugByNewton());
+//		System.out.println("ben: " + g.totalHolesSeededByBenjamin());
+//		Thread.sleep(2000);
+		while (g.totalHolesSeededByBenjamin() != 10){
+			Thread.sleep(1000);
+		}
+		assertEquals(10, g.totalHolesSeededByBenjamin());
+		assertEquals(10, g.totalHolesDugByNewton());
+		
+		for (int i = 0; i < 10; ++i){
+			threadpool.submit(new TestMary(g));
+
+		}
+		
+		while (g.totalHolesFilledByMary() != 10){
+			Thread.sleep(1000);
+		}
+		threadpool.shutdown();
+		assertEquals(10, g.totalHolesSeededByBenjamin());
+		assertEquals(10, g.totalHolesDugByNewton());
+		assertEquals(10, g.totalHolesFilledByMary());
+		
 	}
 	
 	
